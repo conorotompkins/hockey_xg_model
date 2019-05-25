@@ -71,6 +71,11 @@ df_shooting_tile %>%
   scale_fill_viridis_c() +
   theme_void()
 
+df_shooting_tile %>% 
+  ggplot(aes(coords_x, coords_y, fill = shoot_percent)) +
+  geom_raster() +
+  scale_fill_viridis_c()
+
 df %>% 
   ggplot(aes(coords_x, coords_y, fill = event_angle)) +
   geom_tile() +
