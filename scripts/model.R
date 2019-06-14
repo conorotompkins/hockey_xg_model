@@ -57,17 +57,17 @@ model %>%
 model %>% 
   glance()
 
-df_aug <- augment(model, df_analysis, type.predict = "response")
+df_analysis_aug <- augment(model, df_analysis, type.predict = "response")
 
-df_aug %>% 
+df_analysis_aug %>% 
   ggplot(aes(.resid)) +
   geom_density()
 
-df_aug %>% 
+df_analysis_aug %>% 
   ggplot(aes(.fitted)) +
   geom_density()
 
-df_xg_map <- df_aug %>% 
+df_xg_map <- df_analysis_aug %>% 
   group_by(coords_x, coords_y) %>% 
   summarize(xg = mean(.fitted),
             g = mean(goal))
@@ -95,43 +95,33 @@ df_xg_map %>%
   summarize(percent = mean(measure)) %>% 
   ggplot(aes(coords_x, coords_y, fill = percent)) +
   geom_raster() +
-  #facet_wrap(~metric,
-  #           ncol = 1) +
-  scale_fill_viridis_c() +
-  transition_states(metric)
+  facet_wrap(~metric,
+             ncol = 1) +
+  scale_fill_viridis_c()
 
 df_xg_map %>% 
   ggplot(aes(g, xg)) +
   geom_point(alpha = .1) +
   geom_smooth()
 
-df_aug %>% 
+df_analysis_aug %>% 
   mutate(goal = as.numeric(goal)) %>% 
   metrics(goal, .fitted)
 
-df_aug %>% 
+df_analysis_aug %>% 
   mutate(goal = as.factor(goal)) %>%
   roc_auc(goal, .fitted) 
 
-df_aug %>% 
-  filter(is.na(.fitted))
+df_assessment_aug <- augment(model, newdata = df_assessment, type.predict = "response")
 
-test <- df_aug %>% 
-  select(goal, .fitted) %>% 
+df_assessment_aug %>% 
+  mutate(goal = as.numeric(goal)) %>% 
+  metrics(goal, .fitted)
+
+df_assessment_aug %>% 
   mutate(goal = as.factor(goal)) %>%
-  filter(!is.na(goal),
-         !is.na(.fitted))
+  roc_auc(goal, .fitted) 
 
-
-df_aug %>% 
-  select(goal, .fitted) %>% 
-  filter(goal == "TRUE" | goal == "FALSE") %>% 
-  summary()
-mutate(goal = as.factor(goal)) %>% 
-  roc_curve(goal, .fitted)
-
-df_aug %>% 
-  #mutate(goal = as.factor(goal),
-  #       xg = .fitted) %>% 
-  roc_curve(truth = as.factor(goal), .fitted)
-autoplot()
+#df_assessment_aug %>% 
+#  mutate(goal = as.factor(goal)) %>%
+#  roc_curve(goal, .fitted)
